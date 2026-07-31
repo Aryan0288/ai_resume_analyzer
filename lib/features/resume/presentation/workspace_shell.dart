@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -703,7 +704,7 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
   }
 
   // -------------------------------------------------------------
-  // MOBILE / TABLET LAYOUT
+  // MOBILE / TABLET LAYOUT (Modern Glassmorphic Floating Bottom Bar)
   // -------------------------------------------------------------
   Widget _buildMobileTabletLayout(
     BuildContext context, {
@@ -713,55 +714,316 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
     required AuthProvider authProvider,
     required bool isDark,
   }) {
+    final user = authProvider.currentUser;
+    final photoUrl = user?.photoUrl ?? '';
+    final userEmail = user?.email ?? '';
+    final initial = userEmail.isNotEmpty ? userEmail[0].toUpperCase() : 'G';
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF0B1C30) : Colors.white,
-        title: Row(
-          children: [
-            const Icon(Icons.psychology, color: Color(0xFF3525CD)),
-            const SizedBox(width: 8),
-            Text(
-              'ResumeAI',
-              style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800, fontSize: 18, color: const Color(0xFF3525CD)),
-            ),
-          ],
+        elevation: 0,
+        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+        titleSpacing: 16,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Divider(
+            height: 1,
+            color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0),
+          ),
+        ),
+        title: InkWell(
+          onTap: () => context.go('/dashboard'),
+          borderRadius: BorderRadius.circular(8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF4F46E5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.psychology, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'ResumeAI',
+                style: GoogleFonts.plusJakartaSans(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                  color: const Color(0xFF3525CD),
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, size: 20),
-            onPressed: () => _showSignOutConfirmationDialog(context, authProvider),
-          ),
+          if (!authProvider.isAuthenticated)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: ElevatedButton(
+                onPressed: () async {
+                  await authProvider.signInWithGoogle();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF006A61),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  'Sign In',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: PopupMenuButton<String>(
+                offset: const Offset(0, 48),
+                color: isDark ? const Color(0xFF142438) : Colors.white,
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isDark ? const Color(0xFF23354D) : const Color(0xFFE5EEFF),
+                  ),
+                ),
+                onSelected: (value) async {
+                  if (value == 'logout') {
+                    _showSignOutConfirmationDialog(context, authProvider);
+                  } else if (value == 'dashboard') {
+                    context.go('/dashboard');
+                  } else if (value == 'settings') {
+                    context.go('/settings');
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    enabled: false,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            (user?.displayName != null && user!.displayName!.isNotEmpty)
+                                ? user.displayName!
+                                : userEmail.split('@').first,
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: isDark ? Colors.white : const Color(0xFF0B1C30),
+                            ),
+                          ),
+                          Text(
+                            userEmail,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF464555),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'dashboard',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.dashboard_outlined, size: 18, color: Color(0xFF3525CD)),
+                        const SizedBox(width: 10),
+                        Text('Dashboard', style: GoogleFonts.inter(fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'settings',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.settings_outlined, size: 18, color: Color(0xFF3525CD)),
+                        const SizedBox(width: 10),
+                        Text('Settings', style: GoogleFonts.inter(fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.logout, size: 18, color: Color(0xFFEF4444)),
+                        const SizedBox(width: 10),
+                        Text(
+                          'Sign Out',
+                          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFFEF4444)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF006A61),
+                    border: Border.all(color: const Color(0xFF006A61), width: 1.5),
+                  ),
+                  child: ClipOval(
+                    child: photoUrl.isNotEmpty
+                        ? Image.network(
+                            photoUrl,
+                            width: 36,
+                            height: 36,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Center(
+                              child: Text(
+                                initial,
+                                style: GoogleFonts.plusJakartaSans(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              initial,
+                              style: GoogleFonts.plusJakartaSans(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
       body: widget.child,
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
-        selectedItemColor: const Color(0xFF3525CD),
-        unselectedItemColor: const Color(0xFF94A3B8),
-        currentIndex: _getMobileIndex(location),
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              context.go('/dashboard');
-              break;
-            case 1:
-              context.go('/workspace/critique');
-              break;
-            case 2:
-              context.go('/workspace/prep');
-              break;
-            case 3:
-              context.go('/workspace/quiz');
-              break;
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.upload_file), label: 'Analyze'),
-          BottomNavigationBarItem(icon: Icon(Icons.psychology), label: 'Prep'),
-          BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'Quiz'),
-        ],
+      bottomNavigationBar: _buildModernMobileBottomBar(
+        context: context,
+        location: location,
+        isDark: isDark,
+      ),
+    );
+  }
+
+  // Modern Floating Glassmorphic Bottom Navigation Bar
+  Widget _buildModernMobileBottomBar({
+    required BuildContext context,
+    required String location,
+    required bool isDark,
+  }) {
+    final items = [
+      {'icon': Icons.space_dashboard_rounded, 'label': 'Dashboard', 'route': '/dashboard'},
+      {'icon': Icons.analytics_rounded, 'label': 'Analyze', 'route': '/workspace/critique'},
+      {'icon': Icons.record_voice_over_rounded, 'label': 'Prep', 'route': '/workspace/prep'},
+      {'icon': Icons.quiz_rounded, 'label': 'Quiz', 'route': '/workspace/quiz'},
+      {'icon': Icons.settings_rounded, 'label': 'Settings', 'route': '/settings'},
+    ];
+
+    final activeIndex = _getMobileIndex(location);
+
+    return Container(
+      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 10, top: 4),
+      color: Colors.transparent,
+      child: SafeArea(
+        top: false,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(22),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? const Color(0xFF0F172A).withValues(alpha: 0.94)
+                    : Colors.white.withValues(alpha: 0.94),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFE2E8F0),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: items.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  final isSelected = activeIndex == index;
+
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        final route = item['route'] as String;
+                        context.go(route);
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF006A61).withValues(alpha: 0.14)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              item['icon'] as IconData,
+                              size: 20,
+                              color: isSelected
+                                  ? const Color(0xFF006A61)
+                                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              item['label'] as String,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 10,
+                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelected
+                                    ? const Color(0xFF006A61)
+                                    : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
