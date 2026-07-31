@@ -687,7 +687,8 @@ class _QuizScreenState extends State<QuizScreen> {
     Color textMuted,
     bool isDark,
   ) {
-    final hasResumeText = resumeProvider.extractedText.isNotEmpty || resumeProvider.critiques.isNotEmpty;
+    final hasResumeText = resumeProvider.state == IngestionState.success &&
+        resumeProvider.extractedText.trim().isNotEmpty;
 
     if (!hasResumeText) {
       return Container(

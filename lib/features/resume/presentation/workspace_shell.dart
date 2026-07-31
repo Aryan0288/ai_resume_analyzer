@@ -940,30 +940,31 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
     final activeIndex = _getMobileIndex(location);
 
     return Container(
-      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 10, top: 4),
+      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12, top: 4),
       color: Colors.transparent,
       child: SafeArea(
         top: false,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(24),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
               decoration: BoxDecoration(
                 color: isDark
                     ? const Color(0xFF0F172A).withValues(alpha: 0.94)
                     : Colors.white.withValues(alpha: 0.94),
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFE2E8F0),
+                      ? const Color(0xFF006A61).withValues(alpha: 0.3)
+                      : const Color(0xFF006A61).withValues(alpha: 0.18),
+                  width: 1.2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
-                    blurRadius: 16,
+                    color: const Color(0xFF006A61).withValues(alpha: isDark ? 0.25 : 0.08),
+                    blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
                 ],
@@ -983,23 +984,28 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
                       },
                       behavior: HitTestBehavior.opaque,
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 180),
+                        duration: const Duration(milliseconds: 200),
                         padding: const EdgeInsets.symmetric(vertical: 6),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFF006A61).withValues(alpha: 0.14)
+                              ? const Color(0xFF006A61).withValues(alpha: 0.12)
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              item['icon'] as IconData,
-                              size: 20,
-                              color: isSelected
-                                  ? const Color(0xFF006A61)
-                                  : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Icon(
+                                  item['icon'] as IconData,
+                                  size: 22,
+                                  color: isSelected
+                                      ? const Color(0xFF006A61)
+                                      : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 3),
                             Text(
@@ -1008,7 +1014,7 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 10,
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                                 color: isSelected
                                     ? const Color(0xFF006A61)
                                     : (isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B)),

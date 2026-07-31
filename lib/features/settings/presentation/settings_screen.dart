@@ -49,6 +49,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -63,61 +65,197 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final textMuted = isDark ? const Color(0xFF94A3B8) : const Color(0xFF464555);
 
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: bgColor,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1280),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Title Header
-                Text(
-                  'Settings',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Manage your account settings, preferences, and privacy.',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: textMuted,
-                  ),
-                ),
-                const SizedBox(height: 28),
+      drawer: _buildSettingsDrawer(isDark, cardBgColor, borderCol, textPrimary, textMuted),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final isDesktop = constraints.maxWidth >= 800;
+          final tabNames = ['Profile', 'Account', 'Preferences', 'Privacy'];
 
-                // Settings Inner Layout (Sidebar Tabs + Content Area)
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final isDesktop = constraints.maxWidth >= 800;
-                    return Flex(
-                      direction: isDesktop ? Axis.horizontal : Axis.vertical,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20.0),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1280),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title Header with Mobile Hamburger Icon
+                    Row(
                       children: [
-                        // Left Nav Rail / Tabs
-                        SizedBox(
-                          width: isDesktop ? 240 : double.infinity,
-                          child: _buildSettingsTabRail(isDark, cardBgColor, borderCol, textPrimary, textMuted),
-                        ),
-                        if (isDesktop) const SizedBox(width: 24) else const SizedBox(height: 24),
-
-                        // Main Content Pane
+                        if (!isDesktop)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: IconButton(
+                              icon: const Icon(Icons.menu, size: 26),
+                              color: textPrimary,
+                              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                            ),
+                          ),
                         Expanded(
-                          flex: isDesktop ? 1 : 0,
-                          child: _buildActiveTabContent(context, user, isDark, cardBgColor, borderCol, textPrimary, textMuted),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Settings',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      fontSize: isDesktop ? 32 : 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: textPrimary,
+                                    ),
+                                  ),
+                                  if (!isDesktop) ...[
+                                    const SizedBox(width: 10),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF006A61).withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        tabNames[_activeTabIndex],
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF006A61),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Manage your account settings, preferences, and privacy.',
+                                style: GoogleFonts.inter(
+                                  fontSize: isDesktop ? 16 : 13,
+                                  color: textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
-                    );
-                  },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Settings Inner Layout
+                    if (isDesktop)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 240,
+                            child: _buildSettingsTabRail(isDark, cardBgColor, borderCol, textPrimary, textMuted),
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: _buildActiveTabContent(context, user, isDark, cardBgColor, borderCol, textPrimary, textMuted),
+                          ),
+                        ],
+                      )
+                    else
+                      _buildActiveTabContent(context, user, isDark, cardBgColor, borderCol, textPrimary, textMuted),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSettingsDrawer(
+    bool isDark,
+    Color cardBg,
+    Color borderCol,
+    Color textPrimary,
+    Color textMuted,
+  ) {
+    final tabs = [
+      {'icon': Icons.person_outline, 'label': 'Profile'},
+      {'icon': Icons.shield_outlined, 'label': 'Account'},
+      {'icon': Icons.tune, 'label': 'Preferences'},
+      {'icon': Icons.lock_outline, 'label': 'Privacy'},
+    ];
+
+    return Drawer(
+      backgroundColor: cardBg,
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF006A61),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.settings, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Settings',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Divider(height: 1, color: borderCol),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                children: tabs.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final item = entry.value;
+                  final isSelected = _activeTabIndex == index;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      tileColor: isSelected
+                          ? const Color(0xFF006A61).withValues(alpha: 0.14)
+                          : Colors.transparent,
+                      leading: Icon(
+                        item['icon'] as IconData,
+                        color: isSelected ? const Color(0xFF006A61) : textMuted,
+                        size: 22,
+                      ),
+                      title: Text(
+                        item['label'] as String,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? const Color(0xFF006A61) : textPrimary,
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() => _activeTabIndex = index);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );

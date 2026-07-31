@@ -401,87 +401,101 @@ class _IngestionScreenState extends State<IngestionScreen> with SingleTickerProv
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () => provider.pickAndParseFile(pdfParser),
-                icon: const Icon(Icons.attach_file, color: Colors.white, size: 18),
-                label: Text(
-                  'Browse Files',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                icon: const Icon(Icons.upload_file, color: Colors.white, size: 18),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    'Upload Resume Now',
+                    maxLines: 1,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3525CD),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                   elevation: 2,
                 ),
               ),
             ] else ...[
-              // Selected File State
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1E2D42) : const Color(0xFFEFF4FF),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: borderCol),
+              // Selected File State (100% Centered Layout)
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF1E2D42) : const Color(0xFFEFF4FF),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: borderCol),
+                          ),
+                          child: const Icon(
+                            Icons.description,
+                            size: 36,
+                            color: Color(0xFF3525CD),
+                          ),
+                        ),
+                        Positioned(
+                          top: -4,
+                          right: -4,
+                          child: Container(
+                            width: 22,
+                            height: 22,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF006A61),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.check, color: Colors.white, size: 14),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: const Icon(
-                      Icons.description,
-                      size: 36,
-                      color: Color(0xFF3525CD),
-                    ),
-                  ),
-                  Positioned(
-                    top: -4,
-                    right: -4,
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF006A61),
-                        shape: BoxShape.circle,
+                    const SizedBox(height: 16),
+                    Text(
+                      provider.selectedFileName,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: textPrimary,
                       ),
-                      child: const Icon(Icons.check, color: Colors.white, size: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                provider.selectedFileName,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'File ready for analysis',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF006A61),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextButton.icon(
-                onPressed: () => provider.pickAndParseFile(pdfParser),
-                icon: const Icon(Icons.refresh, color: Color(0xFF3525CD), size: 18),
-                label: Text(
-                  'Change File',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3525CD),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'File ready for analysis',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF006A61),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () => provider.pickAndParseFile(pdfParser),
+                      icon: const Icon(Icons.refresh, color: Color(0xFF3525CD), size: 18),
+                      label: Text(
+                        'Change File',
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF3525CD),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -1612,93 +1626,97 @@ class _IngestionScreenState extends State<IngestionScreen> with SingleTickerProv
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           backgroundColor: const Color(0xFF0F172A),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            padding: const EdgeInsets.all(28),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F172A),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF334155)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
-                  blurRadius: 30,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+          child: SingleChildScrollView(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFF334155)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF4F46E5).withValues(alpha: 0.2),
+                    blurRadius: 30,
                   ),
-                  child: const Center(
-                    child: Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 34),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 34),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Daily Limit Reached',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  const SizedBox(height: 20),
+                  Text(
+                    'Daily Limit Reached',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  "You've used all 4 free resume analyses for the next 48 hours. Come back soon!",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: const Color(0xFF94A3B8),
-                    height: 1.5,
+                  const SizedBox(height: 10),
+                  Text(
+                    "You've used all 4 free resume analyses for the next 48 hours. Come back soon!",
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: const Color(0xFF94A3B8),
+                      height: 1.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                // Countdown hint
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.schedule, color: Color(0xFF64748B), size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Resets in 48 hours from your first analysis',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: const Color(0xFF64748B),
+                  const SizedBox(height: 20),
+                  // Countdown hint
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.schedule, color: Color(0xFF64748B), size: 16),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'Resets in 48 hours from your first analysis',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3525CD),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3525CD),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: Text(
-                      'Got it',
-                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+                      child: Text(
+                        'Got it',
+                        style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -1782,9 +1800,10 @@ class _AdMobAdModalState extends State<_AdMobAdModal> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       clipBehavior: Clip.hardEdge,
-      child: Container(
-        width: 480,
-        padding: const EdgeInsets.all(24),
+      child: SingleChildScrollView(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 480),
+          padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1943,6 +1962,7 @@ class _AdMobAdModalState extends State<_AdMobAdModal> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
