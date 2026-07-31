@@ -23,7 +23,7 @@ class IngestionScreen extends StatefulWidget {
 class _IngestionScreenState extends State<IngestionScreen> with SingleTickerProviderStateMixin {
   final TextEditingController _roleController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isHoveringDropzone = false;
+  final ValueNotifier<bool> _isHoveringDropzone = ValueNotifier<bool>(false);
 
   late AnimationController _scannerAnimController;
   int _analysisProgress = 0;
@@ -81,6 +81,7 @@ class _IngestionScreenState extends State<IngestionScreen> with SingleTickerProv
 
   @override
   void dispose() {
+    _isHoveringDropzone.dispose();
     _scannerAnimController.dispose();
     _progressTimer?.cancel();
     _roleController.dispose();
@@ -342,166 +343,171 @@ class _IngestionScreenState extends State<IngestionScreen> with SingleTickerProv
   ) {
     final hasFile = provider.selectedFileName.isNotEmpty;
 
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHoveringDropzone = true),
-      onExit: (_) => setState(() => _isHoveringDropzone = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(32),
-        constraints: const BoxConstraints(minHeight: 310),
-        decoration: BoxDecoration(
-          color: _isHoveringDropzone
-              ? const Color(0xFF3525CD).withValues(alpha: 0.05)
-              : cardBg,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _isHoveringDropzone ? const Color(0xFF3525CD) : borderCol,
-            width: _isHoveringDropzone ? 2.0 : 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
+    return ValueListenableBuilder<bool>(
+      valueListenable: _isHoveringDropzone,
+      builder: (context, isHovering, _) {
+        return MouseRegion(
+          onEnter: (_) => _isHoveringDropzone.value = true,
+          onExit: (_) => _isHoveringDropzone.value = false,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(32),
+            constraints: const BoxConstraints(minHeight: 310),
+            decoration: BoxDecoration(
+              color: isHovering
+                  ? const Color(0xFF3525CD).withValues(alpha: 0.05)
+                  : cardBg,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isHovering ? const Color(0xFF3525CD) : borderCol,
+                width: isHovering ? 2.0 : 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!hasFile) ...[
-              // Default Dropzone State
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF3525CD).withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.cloud_upload,
-                  size: 38,
-                  color: Color(0xFF3525CD),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Drag & Drop your resume',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Supports PDF, DOCX, or TXT (Max 5MB)',
-                style: GoogleFonts.inter(fontSize: 14, color: textMuted),
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: () => provider.pickAndParseFile(pdfParser),
-                icon: const Icon(Icons.upload_file, color: Colors.white, size: 18),
-                label: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    'Upload Resume Now',
-                    maxLines: 1,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (!hasFile) ...[
+                  // Default Dropzone State
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3525CD).withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.cloud_upload,
+                      size: 38,
+                      color: Color(0xFF3525CD),
                     ),
                   ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3525CD),
-                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  elevation: 2,
-                ),
-              ),
-            ] else ...[
-              // Selected File State (100% Centered Layout)
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Stack(
-                      clipBehavior: Clip.none,
+                  const SizedBox(height: 20),
+                  Text(
+                    'Drag & Drop your resume',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Supports PDF, DOCX, or TXT (Max 5MB)',
+                    style: GoogleFonts.inter(fontSize: 14, color: textMuted),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () => provider.pickAndParseFile(pdfParser),
+                    icon: const Icon(Icons.upload_file, color: Colors.white, size: 18),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Upload Resume Now',
+                        maxLines: 1,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3525CD),
+                      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      elevation: 2,
+                    ),
+                  ),
+                ] else ...[
+                  // Selected File State (100% Centered Layout)
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF1E2D42) : const Color(0xFFEFF4FF),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: borderCol),
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color: isDark ? const Color(0xFF1E2D42) : const Color(0xFFEFF4FF),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: borderCol),
+                              ),
+                              child: const Icon(
+                                Icons.description,
+                                size: 36,
+                                color: Color(0xFF3525CD),
+                              ),
+                            ),
+                            Positioned(
+                              top: -4,
+                              right: -4,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF006A61),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.check, color: Colors.white, size: 14),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          provider.selectedFileName,
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: textPrimary,
                           ),
-                          child: const Icon(
-                            Icons.description,
-                            size: 36,
-                            color: Color(0xFF3525CD),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'File ready for analysis',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF006A61),
                           ),
                         ),
-                        Positioned(
-                          top: -4,
-                          right: -4,
-                          child: Container(
-                            width: 22,
-                            height: 22,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF006A61),
-                              shape: BoxShape.circle,
+                        const SizedBox(height: 16),
+                        TextButton.icon(
+                          onPressed: () => provider.pickAndParseFile(pdfParser),
+                          icon: const Icon(Icons.refresh, color: Color(0xFF3525CD), size: 18),
+                          label: Text(
+                            'Change File',
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF3525CD),
                             ),
-                            child: const Icon(Icons.check, color: Colors.white, size: 14),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      provider.selectedFileName,
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: textPrimary,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'File ready for analysis',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF006A61),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton.icon(
-                      onPressed: () => provider.pickAndParseFile(pdfParser),
-                      icon: const Icon(Icons.refresh, color: Color(0xFF3525CD), size: 18),
-                      label: Text(
-                        'Change File',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF3525CD),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 

@@ -11,7 +11,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  int _activeTabIndex = 0; // 0: Profile, 1: Account, 2: Preferences, 3: Privacy
+  final ValueNotifier<int> _activeTabIndexNotifier = ValueNotifier<int>(0);
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -19,30 +19,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _initializeUserData();
-    });
-  }
-
-  void _initializeUserData() {
-    final user = context.read<AuthProvider>().currentUser;
+    final authProvider = context.read<AuthProvider>();
+    final user = authProvider.currentUser;
     if (user != null) {
-      final name = (user.displayName != null && user.displayName!.isNotEmpty)
-          ? user.displayName!
-          : user.email.split('@').first;
-      final nameParts = name.split(' ');
+      final nameParts = (user.displayName ?? '').split(' ');
       _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
       _lastNameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
       _emailController.text = user.email;
-    } else {
-      _firstNameController.text = '';
-      _lastNameController.text = '';
-      _emailController.text = '';
     }
   }
 
   @override
   void dispose() {
+    _activeTabIndexNotifier.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
@@ -73,96 +62,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
           final isDesktop = constraints.maxWidth >= 800;
           final tabNames = ['Profile', 'Account', 'Preferences', 'Privacy'];
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1280),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title Header with Mobile Hamburger Icon
-                    Row(
+          return ValueListenableBuilder<int>(
+            valueListenable: _activeTabIndexNotifier,
+            builder: (context, activeIndex, _) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1280),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (!isDesktop)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: IconButton(
-                              icon: const Icon(Icons.menu, size: 26),
-                              color: textPrimary,
-                              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                            ),
-                          ),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Settings',
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: isDesktop ? 32 : 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: textPrimary,
-                                    ),
-                                  ),
-                                  if (!isDesktop) ...[
-                                    const SizedBox(width: 10),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFF006A61).withValues(alpha: 0.12),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        tabNames[_activeTabIndex],
-                                        style: GoogleFonts.inter(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF006A61),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Manage your account settings, preferences, and privacy.',
-                                style: GoogleFonts.inter(
-                                  fontSize: isDesktop ? 16 : 13,
-                                  color: textMuted,
+                        // Title Header with Mobile Hamburger Icon
+                        Row(
+                          children: [
+                            if (!isDesktop)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: IconButton(
+                                  icon: const Icon(Icons.menu, size: 26),
+                                  color: textPrimary,
+                                  onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                                 ),
                               ),
-                            ],
-                          ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Settings',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          fontSize: isDesktop ? 32 : 24,
+                                          fontWeight: FontWeight.bold,
+                                          color: textPrimary,
+                                        ),
+                                      ),
+                                      if (!isDesktop) ...[
+                                        const SizedBox(width: 10),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFF006A61).withValues(alpha: 0.12),
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            tabNames[activeIndex],
+                                            style: GoogleFonts.inter(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF006A61),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Manage your account settings, preferences, and privacy.',
+                                    style: GoogleFonts.inter(
+                                      fontSize: isDesktop ? 16 : 13,
+                                      color: textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 24),
+
+                        // Settings Inner Layout
+                        if (isDesktop)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(
+                                width: 240,
+                                child: _buildSettingsTabRail(isDark, cardBgColor, borderCol, textPrimary, textMuted, activeIndex),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: _buildActiveTabContent(context, user, isDark, cardBgColor, borderCol, textPrimary, textMuted, activeIndex),
+                              ),
+                            ],
+                          )
+                        else
+                          _buildActiveTabContent(context, user, isDark, cardBgColor, borderCol, textPrimary, textMuted, activeIndex),
                       ],
                     ),
-                    const SizedBox(height: 24),
-
-                    // Settings Inner Layout
-                    if (isDesktop)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(
-                            width: 240,
-                            child: _buildSettingsTabRail(isDark, cardBgColor, borderCol, textPrimary, textMuted),
-                          ),
-                          const SizedBox(width: 24),
-                          Expanded(
-                            child: _buildActiveTabContent(context, user, isDark, cardBgColor, borderCol, textPrimary, textMuted),
-                          ),
-                        ],
-                      )
-                    else
-                      _buildActiveTabContent(context, user, isDark, cardBgColor, borderCol, textPrimary, textMuted),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           );
         },
       ),
@@ -217,42 +211,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Divider(height: 1, color: borderCol),
             const SizedBox(height: 12),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                children: tabs.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final item = entry.value;
-                  final isSelected = _activeTabIndex == index;
+              child: ValueListenableBuilder<int>(
+                valueListenable: _activeTabIndexNotifier,
+                builder: (context, activeIndex, _) {
+                  return ListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    children: tabs.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final item = entry.value;
+                      final isSelected = activeIndex == index;
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      tileColor: isSelected
-                          ? const Color(0xFF006A61).withValues(alpha: 0.14)
-                          : Colors.transparent,
-                      leading: Icon(
-                        item['icon'] as IconData,
-                        color: isSelected ? const Color(0xFF006A61) : textMuted,
-                        size: 22,
-                      ),
-                      title: Text(
-                        item['label'] as String,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                          color: isSelected ? const Color(0xFF006A61) : textPrimary,
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          tileColor: isSelected
+                              ? const Color(0xFF006A61).withValues(alpha: 0.14)
+                              : Colors.transparent,
+                          leading: Icon(
+                            item['icon'] as IconData,
+                            color: isSelected ? const Color(0xFF006A61) : textMuted,
+                            size: 22,
+                          ),
+                          title: Text(
+                            item['label'] as String,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                              color: isSelected ? const Color(0xFF006A61) : textPrimary,
+                            ),
+                          ),
+                          onTap: () {
+                            _activeTabIndexNotifier.value = index;
+                            Navigator.pop(context);
+                          },
                         ),
-                      ),
-                      onTap: () {
-                        setState(() => _activeTabIndex = index);
-                        Navigator.pop(context);
-                      },
-                    ),
+                      );
+                    }).toList(),
                   );
-                }).toList(),
+                },
               ),
             ),
           ],
@@ -261,7 +260,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSettingsTabRail(bool isDark, Color cardBg, Color borderCol, Color textPrimary, Color textMuted) {
+  Widget _buildSettingsTabRail(bool isDark, Color cardBg, Color borderCol, Color textPrimary, Color textMuted, int activeIndex) {
     final tabs = [
       {'icon': Icons.person, 'label': 'Profile'},
       {'icon': Icons.shield_outlined, 'label': 'Account'},
@@ -280,12 +279,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: tabs.asMap().entries.map((entry) {
           final index = entry.key;
           final item = entry.value;
-          final isSelected = _activeTabIndex == index;
+          final isSelected = activeIndex == index;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: InkWell(
-              onTap: () => setState(() => _activeTabIndex = index),
+              onTap: () => _activeTabIndexNotifier.value = index,
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -332,12 +331,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Color borderCol,
     Color textPrimary,
     Color textMuted,
+    int activeIndex,
   ) {
-    if (_activeTabIndex == 0) {
+    if (activeIndex == 0) {
       return _buildProfileTab(context, user, isDark, cardBg, borderCol, textPrimary, textMuted);
-    } else if (_activeTabIndex == 1) {
+    } else if (activeIndex == 1) {
       return _buildGenericSection('Account Settings', 'Security, password & multi-factor authentication.', cardBg, borderCol, textPrimary, textMuted);
-    } else if (_activeTabIndex == 2) {
+    } else if (activeIndex == 2) {
       return _buildGenericSection('Preferences', 'Notification preferences, language & theme controls.', cardBg, borderCol, textPrimary, textMuted);
     } else {
       return _buildGenericSection('Privacy', 'Data retention policy, resume AI storage & permissions.', cardBg, borderCol, textPrimary, textMuted);
@@ -485,6 +485,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 28),
 
+                // Guest User Notice Banner
+                if (!authProvider.isAuthenticated)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_outline, color: Color(0xFFF59E0B), size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Guest Mode: Sign in with Google to enable saving profile changes.',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? const Color(0xFFFBBF24) : const Color(0xFFB45309),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // Form Fields (First Name, Last Name, Email)
                 LayoutBuilder(
                   builder: (context, constraints) {
@@ -494,12 +522,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Expanded(
                           flex: isWide ? 1 : 0,
-                          child: _buildFormField('First Name', _firstNameController, textPrimary, textMuted, borderCol, isDark),
+                          child: _buildFormField('First Name', _firstNameController, textPrimary, textMuted, borderCol, isDark, readOnly: !authProvider.isAuthenticated),
                         ),
                         if (isWide) const SizedBox(width: 16) else const SizedBox(height: 16),
                         Expanded(
                           flex: isWide ? 1 : 0,
-                          child: _buildFormField('Last Name', _lastNameController, textPrimary, textMuted, borderCol, isDark),
+                          child: _buildFormField('Last Name', _lastNameController, textPrimary, textMuted, borderCol, isDark, readOnly: !authProvider.isAuthenticated),
                         ),
                       ],
                     );
@@ -515,30 +543,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     ElevatedButton(
-                      onPressed: () async {
-                        final first = _firstNameController.text.trim();
-                        final last = _lastNameController.text.trim();
-                        final newName = "$first $last".trim();
+                      onPressed: authProvider.isAuthenticated
+                          ? () async {
+                              final first = _firstNameController.text.trim();
+                              final last = _lastNameController.text.trim();
+                              final newName = "$first $last".trim();
 
-                        final success = await authProvider.updateProfileName(newName.isNotEmpty ? newName : 'User');
+                              final success = await authProvider.updateProfileName(newName.isNotEmpty ? newName : 'User');
 
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                success
-                                    ? '🎉 Profile updated successfully!'
-                                    : 'Failed to update profile: ${authProvider.errorMessage}',
-                                style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
-                              ),
-                              backgroundColor: success ? const Color(0xFF006A61) : Colors.red,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      success
+                                          ? '🎉 Profile updated successfully!'
+                                          : 'Failed to update profile: ${authProvider.errorMessage}',
+                                      style: GoogleFonts.inter(fontWeight: FontWeight.bold, color: Colors.white),
+                                    ),
+                                    backgroundColor: success ? const Color(0xFF006A61) : Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3525CD),
+                        disabledBackgroundColor: isDark ? const Color(0xFF1E2D42) : const Color(0xFFE2E8F0),
+                        disabledForegroundColor: textMuted,
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
@@ -547,7 +579,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: authProvider.isAuthenticated ? Colors.white : textMuted,
                         ),
                       ),
                     ),

@@ -236,6 +236,7 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
                   label: 'Settings',
                   onTap: () => context.go('/settings'),
                   textMuted: textMuted,
+                  isActive: location.startsWith('/settings'),
                 ),
                 const SizedBox(height: 4),
                 _buildFooterNavItem(
@@ -307,22 +308,27 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
     required String label,
     required VoidCallback onTap,
     required Color textMuted,
+    bool isActive = false,
   }) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: Padding(
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFFDCE9FF).withValues(alpha: 0.6) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Row(
           children: [
-            Icon(icon, color: textMuted, size: 18),
+            Icon(icon, color: isActive ? const Color(0xFF3525CD) : textMuted, size: 18),
             const SizedBox(width: 12),
             Text(
               label,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: textMuted,
+                fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                color: isActive ? const Color(0xFF3525CD) : textMuted,
               ),
             ),
           ],
@@ -1138,10 +1144,11 @@ class _WorkspaceShellState extends State<WorkspaceShell> {
   }
 
   int _getMobileIndex(String path) {
-    if (path == '/dashboard') return 0;
-    if (path == '/workspace/critique' || path == '/') return 1;
-    if (path == '/workspace/prep') return 2;
-    if (path == '/workspace/quiz') return 3;
+    if (path.startsWith('/dashboard')) return 0;
+    if (path.startsWith('/workspace/critique') || path == '/' || path.startsWith('/workspace/split')) return 1;
+    if (path.startsWith('/workspace/prep')) return 2;
+    if (path.startsWith('/workspace/quiz')) return 3;
+    if (path.startsWith('/settings')) return 4;
     return 0;
   }
 }

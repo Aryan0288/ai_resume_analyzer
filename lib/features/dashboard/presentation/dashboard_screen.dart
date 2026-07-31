@@ -23,13 +23,19 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  int? _hoveredBarIndex;
+  final ValueNotifier<int?> _hoveredBarIndex = ValueNotifier<int?>(null);
   String? _lastSyncedUid;
 
   @override
   void initState() {
     super.initState();
     _checkAndSyncUser();
+  }
+
+  @override
+  void dispose() {
+    _hoveredBarIndex.dispose();
+    super.dispose();
   }
 
   void _checkAndSyncUser() {
@@ -970,60 +976,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       height: 120,
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: List.generate(trends.length, (index) {
-                            final item = trends[index];
-                            final heightFactor = (item.score / 100.0).clamp(0.1, 1.0);
-                            final isHovered = _hoveredBarIndex == index;
+                        child: ValueListenableBuilder<int?>(
+                          valueListenable: _hoveredBarIndex,
+                          builder: (context, hoveredIdx, _) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: List.generate(trends.length, (index) {
+                                final item = trends[index];
+                                final heightFactor = (item.score / 100.0).clamp(0.1, 1.0);
+                                final isHovered = hoveredIdx == index;
 
-                            return MouseRegion(
-                              onEnter: (_) => setState(() => _hoveredBarIndex = index),
-                              onExit: (_) => setState(() => _hoveredBarIndex = null),
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    AnimatedOpacity(
-                                      duration: const Duration(milliseconds: 150),
-                                      opacity: isHovered || trends.length == 1 ? 1.0 : 0.0,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF213145),
-                                          borderRadius: BorderRadius.circular(4),
-                                        ),
-                                        child: Text(
-                                          '${item.score}%',
-                                          style: GoogleFonts.inter(
-                                            fontSize: 10,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
+                                return MouseRegion(
+                                  onEnter: (_) => _hoveredBarIndex.value = index,
+                                  onExit: (_) => _hoveredBarIndex.value = null,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        AnimatedOpacity(
+                                          duration: const Duration(milliseconds: 150),
+                                          opacity: isHovered || trends.length == 1 ? 1.0 : 0.0,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFF213145),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              '${item.score}%',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 10,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    AnimatedContainer(
-                                      duration: const Duration(milliseconds: 300),
-                                      curve: Curves.easeOutCubic,
-                                      width: 32,
-                                      height: 80 * heightFactor,
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.bottomCenter,
-                                          end: Alignment.topCenter,
-                                          colors: [Color(0xFF3525CD), Color(0xFF6366F1)],
+                                        const SizedBox(height: 4),
+                                        AnimatedContainer(
+                                          duration: const Duration(milliseconds: 300),
+                                          curve: Curves.easeOutCubic,
+                                          width: 32,
+                                          height: 80 * heightFactor,
+                                          decoration: BoxDecoration(
+                                            gradient: const LinearGradient(
+                                              begin: Alignment.bottomCenter,
+                                              end: Alignment.topCenter,
+                                              colors: [Color(0xFF3525CD), Color(0xFF6366F1)],
+                                            ),
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                                          ),
                                         ),
-                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-                                      ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              }),
                             );
-                          }),
+                          },
                         ),
                       ),
                     ),
