@@ -10,8 +10,27 @@ import '../../features/report/data/models/compile_report_response.dart';
 /// Direct Client-Side Gemini AI Service.
 /// Enables 100% live Gemini AI functionality directly in Flutter without requiring Cloud Functions deployment.
 class GeminiService {
-  /// Gemini API Key
-  static String apiKey = 'AIzaSyAM95dc2puInPVWpaQwxrJm_DHQyKwdgTQ';
+  static String apiKey = '';
+
+  static List<String> get apiKeysList {
+    const envKeys = String.fromEnvironment('GEMINI_API_KEYS', defaultValue: '');
+    const singleEnvKey = String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
+
+    final rawString = envKeys.isNotEmpty
+        ? envKeys
+        : (singleEnvKey.isNotEmpty ? singleEnvKey : apiKey);
+
+    final List<String> result = [];
+    if (rawString.contains(',') || rawString.contains(';')) {
+      result.addAll(rawString.split(RegExp(r'[,;]')).map((k) => k.trim()));
+    } else {
+      result.add(rawString.trim());
+    }
+
+    return result
+        .where((k) => k.isNotEmpty && !k.startsWith('YOUR_GEMINI_API_KEY'))
+        .toList();
+  }
 
   static bool get isApiKeyConfigured => apiKeysList.isNotEmpty;
 
@@ -323,8 +342,11 @@ Return ONLY valid JSON matching this exact structure:
                 }
               }
             } else if (response.statusCode == 429) {
-              debugPrint('[GeminiService] Rate limit (429) on $model (Key: $keyPrefix...). Backoff wait 1.5s (Attempt ${attempt + 1})...');
-              await Future.delayed(const Duration(milliseconds: 1500));
+              debugPrint('[GeminiService] Rate limit (429) on $model (Key: $keyPrefix...). Rotating to next key in pool...');
+              break; // Try next API key in pool
+            } else if (response.statusCode == 403) {
+              debugPrint('[GeminiService] Key revoked or quota limit reached (403) on $model (Key: $keyPrefix...). Rotating to next key in pool...');
+              break; // Try next API key in pool
             } else {
               debugPrint('[GeminiService] Model $model returned status ${response.statusCode}: ${response.body}. Trying next key/model...');
               break; // Try next key or model
