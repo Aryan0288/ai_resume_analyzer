@@ -1,5 +1,5 @@
 [build]
-  command = "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && ./flutter/bin/flutter build web --release"
+  command = "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && ./flutter/bin/flutter build web --release --dart-define=GEMINI_API_KEYS=$GEMINI_API_KEYS --dart-define=GEMINI_API_KEY=$GEMINI_API_KEY"
   publish = "build/web"
 
 [build.environment]
