@@ -690,7 +690,7 @@ class _IngestionScreenState extends State<IngestionScreen> with SingleTickerProv
     );
   }
 
-  // Footer Action Buttons Row
+  // Footer Action Buttons Row (Responsive MWeb & Desktop)
   Widget _buildActionFooterRow(
     BuildContext context,
     ResumeProvider provider,
@@ -704,103 +704,121 @@ class _IngestionScreenState extends State<IngestionScreen> with SingleTickerProv
     final uid = authProvider.currentUser?.uid ?? 'anonymous';
     final remainingAttempts = storage.getRemainingAttempts(uid);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Attempts Status Counter Pill
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E2D42) : const Color(0xFFEFF4FF),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF3525CD).withValues(alpha: 0.2)),
+    final attemptsPill = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E2D42) : const Color(0xFFEFF4FF),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF3525CD).withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.bolt, color: Color(0xFFF59E0B), size: 18),
+          const SizedBox(width: 6),
+          Text(
+            'Attempts Remaining (48h): ',
+            style: GoogleFonts.inter(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF464555)),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.bolt, color: Color(0xFFF59E0B), size: 18),
-              const SizedBox(width: 6),
-              Text(
-                'Attempts Remaining (48h): ',
-                style: GoogleFonts.inter(fontSize: 12, color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF464555)),
-              ),
-              Text(
-                '$remainingAttempts',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: remainingAttempts > 0 ? const Color(0xFF006A61) : const Color(0xFFEF4444),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Primary Start Analysis Button
-        ElevatedButton.icon(
-          onPressed: canAnalyze
-              ? () {
-                  // 1. Target Role Mandatory Validation
-                  if (!hasRole) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Please select or enter a Target Role before analyzing.',
-                          style: GoogleFonts.inter(fontSize: 14, color: Colors.white),
-                        ),
-                        backgroundColor: const Color(0xFF3525CD),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                    return;
-                  }
-
-                  // 2. Google Authentication Guard
-                  if (!authProvider.isAuthenticated) {
-                    _showGoogleAuthDialog(context);
-                    return;
-                  }
-
-                  // 3. 48-Hour Attempt Limit Check (4 per 48 hours per UID)
-                  if (remainingAttempts <= 0) {
-                    if (kIsWeb) {
-                      // Web: No AdMob — show clean limit-reached dialog
-                      _showLimitReachedWebDialog(context);
-                    } else {
-                      // Android/iOS: Show AdMob rewarded ad dialog
-                      _showAdMobUnlockDialog(context, storage, () {
-                        storage.recordAnalysisAttempt(uid);
-                        _executeAnalysisPipeline(context, provider, storage, uid);
-                      });
-                    }
-                    return;
-                  }
-
-                  // Deduct attempt & run analysis
-                  storage.recordAnalysisAttempt(uid);
-                  _executeAnalysisPipeline(context, provider, storage, uid);
-                }
-              : null,
-          icon: const Icon(Icons.analytics, color: Colors.white, size: 20),
-          label: Text(
-            'Start Analysis',
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
+          Text(
+            '$remainingAttempts',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: remainingAttempts > 0 ? const Color(0xFF006A61) : const Color(0xFFEF4444),
             ),
           ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF006A61),
-            disabledBackgroundColor: const Color(0xFF006A61).withValues(alpha: 0.4),
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            elevation: canAnalyze ? 3 : 0,
+        ],
+      ),
+    );
+
+    void onStartAnalysisPressed() {
+      // 1. Target Role Mandatory Validation
+      if (!hasRole) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Please select or enter a Target Role before analyzing.',
+              style: GoogleFonts.inter(fontSize: 14, color: Colors.white),
+            ),
+            backgroundColor: const Color(0xFF3525CD),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 3),
           ),
+        );
+        return;
+      }
+
+      // 2. Google Authentication Guard
+      if (!authProvider.isAuthenticated) {
+        _showGoogleAuthDialog(context);
+        return;
+      }
+
+      // 3. 48-Hour Attempt Limit Check
+      if (remainingAttempts <= 0) {
+        if (kIsWeb) {
+          _showLimitReachedWebDialog(context);
+        } else {
+          _showAdMobUnlockDialog(context, storage, () {
+            storage.recordAnalysisAttempt(uid);
+            _executeAnalysisPipeline(context, provider, storage, uid);
+          });
+        }
+        return;
+      }
+
+      storage.recordAnalysisAttempt(uid);
+      _executeAnalysisPipeline(context, provider, storage, uid);
+    }
+
+    final startButton = ElevatedButton.icon(
+      onPressed: canAnalyze ? onStartAnalysisPressed : null,
+      icon: const Icon(Icons.analytics, color: Colors.white, size: 20),
+      label: Text(
+        'Start Analysis',
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
         ),
-      ],
+      ),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF006A61),
+        disabledBackgroundColor: const Color(0xFF006A61).withValues(alpha: 0.4),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        elevation: canAnalyze ? 3 : 0,
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 540;
+        if (isDesktop) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              attemptsPill,
+              startButton,
+            ],
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: attemptsPill),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: startButton,
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 

@@ -1,11 +1,11 @@
 {
-    "name": "ai_resume_analyzer",
-    "short_name": "ai_resume_analyzer",
+    "name": "ResumeAI Studio - AI Resume & Career Coach",
+    "short_name": "ResumeAI",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0B132B",
+    "theme_color": "#3525CD",
+    "description": "AI-Powered ATS Resume Analyzer, Career Report Generator, and STAR Interview Coach.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
