@@ -262,20 +262,7 @@ Return ONLY valid JSON matching this exact structure:
     }
   }
 
-  static List<String> get apiKeysList {
-    final rawList = [apiKey];
-    final List<String> result = [];
-    for (final item in rawList) {
-      if (item.contains(',') || item.contains(';')) {
-        result.addAll(item.split(RegExp(r'[,;]')).map((k) => k.trim()));
-      } else {
-        result.add(item.trim());
-      }
-    }
-    return result
-        .where((k) => k.isNotEmpty && !k.startsWith('YOUR_GEMINI_API_KEY'))
-        .toList();
-  }
+
 
   static const List<String> _models = [
     'gemini-flash-latest',
